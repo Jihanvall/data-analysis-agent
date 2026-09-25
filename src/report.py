@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+
 def generate_report(result, dataset_name="dataset"):
     lines = []
     lines.append(f"# Data Analysis Report: {dataset_name}")
@@ -36,3 +39,15 @@ def generate_report(result, dataset_name="dataset"):
     lines.append("")
 
     return "\n".join(lines)
+
+def save_report(report_text, dataset_name="dataset", folder="reports"):
+    os.makedirs(folder, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in dataset_name)
+    filename = f"{safe_name}_{timestamp}.md"
+    filepath = os.path.join(folder, filename)
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(report_text)
+
+    return filepath
