@@ -25,11 +25,19 @@ def generate_report(result, dataset_name="dataset"):
     lines.append("")
     lines.append(f"**Best model:** `{result['model_name']}`")
     lines.append("")
-    lines.append("Cross-validation scores:")
-    lines.append("")
-    for name, score in result["cv_scores"].items():
-        marker = " ✅" if name == result["model_name"] else ""
-        lines.append(f"- {name}: {round(score, 4)}{marker}")
+    cv = result["cv_scores"]
+    if "scoring_used" in cv:
+        lines.append(f"Cross-validation scores (metric: `{cv['scoring_used']}`):")
+        lines.append("")
+        for name, score in cv["scores"].items():
+            marker = " ✅" if name == result["model_name"] else ""
+            lines.append(f"- {name}: {round(score, 4)}{marker}")
+    else:
+        lines.append("Cross-validation scores:")
+        lines.append("")
+        for name, score in cv.items():
+            marker = " ✅" if name == result["model_name"] else ""
+            lines.append(f"- {name}: {round(score, 4)}{marker}")
     lines.append("")
 
     lines.append("## Test Set Performance")
