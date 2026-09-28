@@ -13,9 +13,11 @@ TASK_TYPES = {"classification", "regression", "clustering"}
 
 ALLOWED_ACTIONS = {
     "drop_column",
+    "add_missing_indicator",
     "fill_missing_mean",
     "fill_missing_median",
     "fill_missing_mode",
+    "drop_rows_with_missing",
     "remove_outliers",
     "encode_categorical",
     "none",
@@ -26,16 +28,19 @@ Choose preprocessing steps that fit the task and the data. Follow these rules:
 - Use only column names that appear in the report. Never invent columns.
 - Never drop the target column and never remove outliers in it. Use action "none" for it.
 - Drop identifier-like columns (n_unique equals n_rows, or the name suggests an id).
-- Drop any column with more than 50 percent missing values.
+- Drop any column with more than 60 percent missing values.
 - Drop columns that look like dates or free text (no date handling is available).
 - Text columns (dtype object or str): use encode_categorical only if n_unique is 15 or less, otherwise drop_column.
-- Numeric columns with missing values: use fill_missing_median if outlier_count is greater than 0, otherwise fill_missing_mean. Text columns with missing values: use fill_missing_mode before encoding.
+- Each column with missing values has n_missing and may have missingness_evidence. The evidence is reliable only when n_missing is at least 30. If n_missing is below 30, ignore the evidence completely.
+- If n_missing is at least 30 and the target distribution (or target mean) differs by more than 15 percentage points in any class between when_missing and when_present, the missingness may not be random. In that case first use add_missing_indicator, then fill the column, and mention possible non-random missingness in the reason.
+- Otherwise, if missing_pct is 5 or less, use drop_rows_with_missing.
+- Otherwise, fill missing values. Numeric columns use fill_missing_median if outlier_count is greater than 0, otherwise fill_missing_mean. Text columns use fill_missing_mode.
 - Ignore outlier_count for columns with n_unique of 10 or less, they are binary or categorical numbers.
 - Do not remove outliers when they may be the signal (fraud, anomaly detection, rare events).
-- A column may have several steps. Steps run in the order you list them: fill missing values first, then remove outliers, then encode.
-- Omit columns that need no change. Keep each reason under 15 words.
+- A column may have several steps. Steps run in a safe order automatically: drop, indicator, fill, outliers, encode.
+- Omit columns that need no change. Keep each reason under 20 words.
 Return a JSON object in this exact shape:
-{"steps": [{"column": "<column name or null>", "action": "<one of: drop_column, fill_missing_mean, fill_missing_median, fill_missing_mode, remove_outliers, encode_categorical, none>", "reason": "<short reason>"}]}
+{"steps": [{"column": "<column name or null>", "action": "<one of: drop_column, add_missing_indicator, fill_missing_mean, fill_missing_median, fill_missing_mode, drop_rows_with_missing, remove_outliers, encode_categorical, none>", "reason": "<short reason>"}]}
 """
 
 def get_preprocessing_plan(report, target, task_type):
