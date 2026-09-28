@@ -49,6 +49,7 @@ def inspect_data(df, target=None):
         col_info = {
             "dtype": str(df[col].dtype),
             "missing_pct": round(float(df[col].isna().mean() * 100), 2),
+            "n_missing": int(df[col].isna().sum()),
             "n_unique": int(df[col].nunique()),
             "sample_values": df[col].dropna().head(3).astype(str).tolist(),
         }
