@@ -59,3 +59,39 @@ def test_remove_outliers_test_clips_instead_of_dropping():
     fitted, _ = fit_plan(df, plan)
     out, _ = transform(df, fitted, drop_outlier_rows=False)
     assert len(out) == len(df)
+
+def test_add_missing_indicator_marks_missing_rows():
+    df = pd.DataFrame({"age": [25, None, 30, None]})
+    plan = {"steps": [{"column": "age", "action": "add_missing_indicator"}]}
+    fitted, _ = fit_plan(df, plan)
+    out, _= transform(df, fitted)
+    assert out["age_was_missing"].tolist() == [0, 1, 0, 1]
+
+def test_indicator_runs_before_fill():
+    df = pd.DataFrame({"age": [25, None, 30]})
+    plan = {
+        "steps": [
+            {"column": "age", "action": "fill_missing_mean"},
+            {"column": "age", "action": "add_missing_indicator"},
+        ]
+    }
+    fitted, _ = fit_plan(df, plan)
+    out, _ = transform(df, fitted)
+    assert out["age_was_missing"].tolist() == [0, 1, 0]
+
+def test_drop_rows_with_missing_removes_rows_in_train():
+    df = pd.DataFrame({"city": ["a", None, "b", "a"]})
+    plan = {"steps": [{"column": "city", "action": "drop_rows_with_missing"}]}
+    fitted, _ = fit_plan(df, plan)
+    out, _ = transform(df, fitted, drop_outlier_rows=True)
+    assert len(out) == 3
+    assert out["city"].isna().sum() == 0
+
+def test_drop_rows_with_missing_fills_instead_in_test():
+    train = pd.DataFrame({"city": ["a", "a", "b", "a"]})
+    test = pd.DataFrame({"city": ["a", None]})
+    plan = {"steps": [{"column": "city", "action": "drop_rows_with_missing"}]}
+    fitted, _ = fit_plan(train, plan)
+    out, _ = transform(test, fitted, drop_outlier_rows=False)
+    assert len(out) == 2
+    assert out["city"].isna().sum() == 0
