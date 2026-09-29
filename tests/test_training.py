@@ -28,7 +28,7 @@ def test_classification_returns_valid_model_name():
     X, y = _classification_data()
     model, name, scores = select_and_train(X, y, "classification")
     assert name in {"logistic_regression", "random_forest", "gradient_boosting"}
-    assert set(scores.keys()) == {"logistic_regression", "random_forest", "gradient_boosting"}
+    assert set(scores["scores"].keys()) == {"logistic_regression", "random_forest", "gradient_boosting"}
 
 
 def test_classification_model_can_predict():
