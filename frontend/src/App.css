@@ -1,0 +1,41 @@
+.app {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: bold;
+}
+
+input,
+select {
+  padding: 8px;
+  font-size: 14px;
+}
+
+button {
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+}
+
+.result {
+  margin-top: 24px;
+  border-top: 1px solid #ccc;
+  padding-top: 16px;
+}
