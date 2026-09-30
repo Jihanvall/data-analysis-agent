@@ -33,6 +33,10 @@ GEMINI_API_KEY=your_key_here
 
 ## Running the pipeline
 
+There are three ways to run the pipeline.
+
+### 1. From Python directly
+
 ```python
 from src.pipeline import run_pipeline
 
@@ -44,6 +48,34 @@ print(result["model_name"], result["test_metrics"])
 `task_type` can be `"classification"`, `"regression"`, or `"clustering"`.
 
 This returns a dictionary with the trained model, cross-validation scores, test metrics, the preprocessing plan, and an execution log. A Markdown report is also generated via `src/report.py` and can be saved with `save_report()`.
+
+### 2. From the command line (CLI)
+
+```
+python run.py --file data/your_file.csv --target your_target_column --task classification --name your_dataset_name
+```
+
+`--target` is required unless `--task` is `clustering`. The best model, test metrics, and saved report path are printed to the terminal.
+
+### 3. From the web interface (FastAPI + React)
+
+This starts a local API server and a browser-based UI for uploading a file and viewing results interactively.
+
+Terminal 1 — start the backend:
+
+```
+uvicorn api:app --reload
+```
+
+Terminal 2 — start the frontend:
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
+Then open `http://localhost:5173` in your browser, upload a CSV file, enter the target column, choose a task type, and click Analyze.
 
 ## Tests
 
