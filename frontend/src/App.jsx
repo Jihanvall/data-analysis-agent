@@ -86,7 +86,10 @@ function App() {
       setLoading(false);
     }
   };
-
+   
+  const handleDownload = () => {
+    window.open(`http://127.0.0.1:8000/download/${result.session_id}`, "_blank");
+  };
   const cv = result?.cv_scores ?? {};
   const cvScores = cv.scores ?? cv;
   const scoringName = cv.scoring_used ?? "cross-validation";
@@ -166,6 +169,9 @@ function App() {
               <div className="model-label">Best model</div>
               <div className="model-name">{prettify(result.model_name)}</div>
             </div>
+            <button className="download-btn" onClick={handleDownload}>
+               ⬇ Download cleaned data
+            </button>
           </section>
 
           <section className="card">
