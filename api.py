@@ -54,6 +54,7 @@ async def analyze(
             "test_metrics": result["test_metrics"],
             "plan": result["plan"],
             "log": result["log"],
+            "inspection_report": result["inspection_report"],
             "session_id": session_id,
         }  
     except Exception as e:

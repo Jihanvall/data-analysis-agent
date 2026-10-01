@@ -53,6 +53,7 @@ def run_pipeline(csv_path, target, task_type, test_size=0.2, random_state=42):
         "test_metrics": metrics,
         "plan": plan,
         "log": fit_log + train_log + test_log,
+        "inspection_report": inspect_data(df, target=target),
         "train_data": train_out,
         "test_data": test_out,
     }
