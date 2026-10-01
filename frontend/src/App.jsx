@@ -10,6 +10,7 @@ import {
   Cell,
 } from "recharts";
 import "./App.css";
+import DataOverview from "./DataOverview";
 
 const API_URL = "http://127.0.0.1:8000/analyze";
 
@@ -233,7 +234,9 @@ function App() {
               </div>
             </section>
           )}
-
+          {result.inspection_report && (
+            <DataOverview report={result.inspection_report} />
+          )}
           <section className="card">
             <h3>Preprocessing plan</h3>
             <ul className="steps">
