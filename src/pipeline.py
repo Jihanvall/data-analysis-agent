@@ -38,10 +38,16 @@ def run_pipeline(csv_path, target, task_type, test_size=0.2, random_state=42):
     train_out, train_log = transform(train, fitted)
     test_out, test_log = transform(test, fitted, drop_outlier_rows=False)
 
-    X_train = train_out.drop(columns=[target])
-    y_train = train_out[target]
-    X_test = test_out.drop(columns=[target])
-    y_test = test_out[target]
+    if target is not None:
+        X_train = train_out.drop(columns=[target])
+        y_train = train_out[target]
+        X_test = test_out.drop(columns=[target])
+        y_test = test_out[target]
+    else:
+        X_train = train_out
+        y_train = None
+        X_test = test_out
+        y_test = None
 
     model, model_name, cv_scores = select_and_train(X_train, y_train, task_type)
     metrics = evaluate(model, X_test, y_test, task_type)
