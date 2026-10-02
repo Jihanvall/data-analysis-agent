@@ -30,7 +30,9 @@ def run_pipeline(csv_path, target, task_type, test_size=0.2, random_state=42):
     train, test = train_test_split(
         df, test_size=test_size, random_state=random_state, stratify=stratify
     )
-
+    if target is not None:
+        train = train.dropna(subset=[target])
+        test = test.dropna(subset=[target])
     report = inspect_data(train, target=target)
     plan = get_plan_with_retry(report, target, task_type)
 
