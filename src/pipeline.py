@@ -7,6 +7,7 @@ from src.inspection import inspect_data
 from src.decision import get_preprocessing_plan
 from src.preprocessing import fit_plan, transform
 from src.training import select_and_train, evaluate
+from src.model_io import build_bundle
 
 
 def get_plan_with_retry(report, target, task_type, max_attempts=3, wait_seconds=5):
@@ -53,6 +54,15 @@ def run_pipeline(csv_path, target, task_type, test_size=0.2, random_state=42):
 
     model, model_name, cv_scores = select_and_train(X_train, y_train, task_type)
     metrics = evaluate(model, X_test, y_test, task_type)
+    bundle = build_bundle(
+        model=model,
+        model_name=model_name,
+        fitted=fitted,
+        feature_columns=X_train.columns,
+        input_columns=[c for c in train.columns if c != target],
+        target=target,
+        task_type=task_type,
+    )
 
     return {
         "model": model,
@@ -62,6 +72,7 @@ def run_pipeline(csv_path, target, task_type, test_size=0.2, random_state=42):
         "plan": plan,
         "log": fit_log + train_log + test_log,
         "inspection_report": inspect_data(df, target=target),
+        "bundle": bundle,
         "train_data": train_out,
         "test_data": test_out,
     }
