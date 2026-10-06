@@ -9,9 +9,11 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.pipeline import run_pipeline
+from src.predict import prediction_column_name, required_columns
 
 app = FastAPI(title="Autonomous Data Analysis Agent API")
 cleaned_data_store: dict[str, pd.DataFrame] = {}
+bundle_store: dict[str, dict] = {}
 
 app.add_middleware(
     CORSMiddleware,
@@ -47,6 +49,7 @@ async def analyze(
         combined = pd.concat([result["train_data"], result["test_data"]], ignore_index=True)
         session_id = str(uuid.uuid4())
         cleaned_data_store[session_id] = combined
+        bundle_store[session_id] = result["bundle"]
 
         return {
             "model_name": result["model_name"],
@@ -55,6 +58,8 @@ async def analyze(
             "plan": result["plan"],
             "log": result["log"],
             "inspection_report": result["inspection_report"],
+            "required_columns": required_columns(result["bundle"]),
+            "prediction_column": prediction_column_name(result["bundle"]),
             "session_id": session_id,
         }  
     except Exception as e:
