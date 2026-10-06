@@ -1,4 +1,5 @@
 import os
+import json
 import shutil 
 import tempfile
 import uuid
@@ -9,9 +10,12 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.pipeline import run_pipeline
+from src.predict import prediction_column_name, required_columns, predict_with_bundle
 
 app = FastAPI(title="Autonomous Data Analysis Agent API")
 cleaned_data_store: dict[str, pd.DataFrame] = {}
+bundle_store: dict[str, dict] = {}
+predictions_store: dict[str, pd.DataFrame] = {}
 
 app.add_middleware(
     CORSMiddleware,
@@ -47,6 +51,7 @@ async def analyze(
         combined = pd.concat([result["train_data"], result["test_data"]], ignore_index=True)
         session_id = str(uuid.uuid4())
         cleaned_data_store[session_id] = combined
+        bundle_store[session_id] = result["bundle"]
 
         return {
             "model_name": result["model_name"],
@@ -55,6 +60,8 @@ async def analyze(
             "plan": result["plan"],
             "log": result["log"],
             "inspection_report": result["inspection_report"],
+            "required_columns": required_columns(result["bundle"]),
+            "prediction_column": prediction_column_name(result["bundle"]),
             "session_id": session_id,
         }  
     except Exception as e:
@@ -74,4 +81,51 @@ def download_cleaned_data(session_id: str):
         content=csv_bytes,
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=cleaned_data.csv"},
+    )
+
+@app.post("/predict")
+async def predict(
+    session_id: str = Form(...),
+    file: UploadFile = File(...),
+):
+    if session_id not in bundle_store:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    bundle = bundle_store[session_id]
+
+    try:
+        new_df = pd.read_csv(file.file)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read the uploaded file as CSV")
+
+    if new_df.empty:
+        raise HTTPException(status_code=400, detail="The uploaded file has no rows")
+
+    try:
+        out, warnings = predict_with_bundle(bundle, new_df)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    prediction_id = str(uuid.uuid4())
+    predictions_store[prediction_id] = out
+
+    return {
+        "prediction_id": prediction_id,
+        "prediction_column": prediction_column_name(bundle),
+        "n_rows": len(out),
+        "preview": json.loads(out.head(50).to_json(orient="records")),
+        "warnings": warnings,
+    }
+
+@app.get("/download-predictions/{prediction_id}")
+def download_predictions(prediction_id: str):
+    if prediction_id not in predictions_store:
+        raise HTTPException(status_code=404, detail="Predictions not found or expired")
+
+    csv_bytes = predictions_store[prediction_id].to_csv(index=False).encode("utf-8")
+
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=predictions.csv"},
     )
