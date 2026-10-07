@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import "./App.css";
 import DataOverview from "./DataOverview";
+import PredictionSection from "./PredictionSection";
 
 const API_URL = "http://127.0.0.1:8000/analyze";
 
@@ -87,7 +88,7 @@ function App() {
       setLoading(false);
     }
   };
-   
+
   const handleDownload = () => {
     window.open(`http://127.0.0.1:8000/download/${result.session_id}`, "_blank");
   };
@@ -270,6 +271,13 @@ function App() {
               ))}
             </ul>
           </details>
+
+          <PredictionSection
+            key={result.session_id}
+            sessionId={result.session_id}
+            requiredColumns={result.required_columns}
+            predictionColumn={result.prediction_column}
+          />
         </>
       )}
     </div>
