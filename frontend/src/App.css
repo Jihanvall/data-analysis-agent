@@ -433,3 +433,121 @@ form {
   white-space: nowrap;
   color: var(--muted);
 }
+
+.pred-section {
+  margin-top: 32px;
+  padding: 24px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 12px;
+}
+
+.pred-intro {
+  opacity: 0.8;
+}
+
+.pred-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.pred-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.pred-tag {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.15);
+  font-size: 13px;
+}
+
+.pred-drop {
+  display: block;
+  padding: 28px;
+  text-align: center;
+  border: 2px dashed rgba(128, 128, 128, 0.5);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.pred-drop-active {
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.pred-button {
+  margin-top: 16px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  background: #7c3aed;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pred-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pred-error {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.5);
+}
+
+.pred-warnings {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.6);
+}
+
+.pred-result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 8px;
+}
+
+.pred-download {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: #7c3aed;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.pred-table-wrap {
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.pred-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+.pred-table th,
+.pred-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pred-col {
+  background: rgba(124, 58, 237, 0.15);
+  font-weight: 700;
+}
