@@ -17,6 +17,22 @@ cleaned_data_store: dict[str, pd.DataFrame] = {}
 bundle_store: dict[str, dict] = {}
 predictions_store: dict[str, pd.DataFrame] = {}
 
+MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "20"))
+
+def check_upload_size(file: UploadFile) -> None:
+    max_bytes = MAX_UPLOAD_MB * 1024 * 1024
+    file.file.seek(0, os.SEEK_END)
+    size = file.file.tell()
+    file.file.seek(0)
+    if size > max_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                f"File is too large ({size / 1024 / 1024:.1f} MB)."
+                F"the maximum allowed size is {MAX_UPLOAD_MB} MB."
+            ),
+        )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -39,6 +55,7 @@ async def analyze(
     if task_type != "clustering" and not target:
         raise HTTPException(status_code=400, detail="target is required unless task_type is clustering")
 
+    check_upload_size(file)
     tmp_dir = tempfile.mkdtemp()
     tmp_path = os.path.join(tmp_dir, file.filename)
 
@@ -88,6 +105,8 @@ async def predict(
     session_id: str = Form(...),
     file: UploadFile = File(...),
 ):
+    check_upload_size(file)
+
     if session_id not in bundle_store:
         raise HTTPException(status_code=404, detail="Session not found or expired")
 

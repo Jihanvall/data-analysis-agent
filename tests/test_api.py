@@ -213,3 +213,22 @@ def test_predict_then_download_round_trip(client, sample_csv):
     downloaded = pd.read_csv(io.BytesIO(download.content))
     assert len(downloaded) == 3
     assert "predicted_target" in downloaded.columns
+
+def test_analyze_rejects_oversized_file(client, monkeypatch):
+    monkeypatch.setattr(api, "MAX_UPLOAD_MB", 0)
+    response = client.post(
+        "/analyze",
+        files={"file": ("big.csv", b"a,b\n1,2\n", "text/csv")},
+        data={"target": "b", "task_type": "classification"},
+    )
+    assert response.status_code == 413
+    assert "too large" in response.json()["detail"]
+
+def test_predict_rejects_oversized_file(client, monkeypatch):
+    monkeypatch.setattr(api, "MAX_UPLOAD_MB", 0)
+    response = client.post(
+        "/predict",
+        data={"session_id": "anything"},
+        files={"file": ("big.csv", b"a,b\n1,2\n", "text/csv")},
+    )
+    assert "too large" in response.json()["detail"]
