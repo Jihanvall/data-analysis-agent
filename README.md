@@ -1,5 +1,7 @@
 # Autonomous Data Analysis Agent
 
+![CI](https://github.com/Jihanvall/data-analysis-agent/actions/workflows/ci.yml/badge.svg)
+
 An AI-powered tool that takes a raw CSV file and automatically inspects it, decides on a preprocessing plan using the Gemini API, applies that plan safely, trains and selects the best machine learning model, and generates a human-readable report — all without manual data cleaning.
 
 ## How it works
