@@ -1,10 +1,15 @@
+import os
+
 import pandas as pd
 import pytest
 
 from src.inspection import inspect_data
 from src.decision import get_preprocessing_plan, ALLOWED_ACTIONS
 
-
+needs_gemini = pytest.mark.skipif(
+    not os.getenv("GEMINI_API_KEY"),
+    reason="GEMINI_API_KEY IS NOT SET"
+)
 @pytest.fixture(scope="module")
 def sample_report():
     df = pd.DataFrame({
@@ -20,24 +25,24 @@ def sample_report():
 def sample_plan(sample_report):
     return get_preprocessing_plan(sample_report, "churn", "classification")
 
-
+@needs_gemini
 def test_plan_has_steps_key(sample_plan):
     assert "steps" in sample_plan
     assert isinstance(sample_plan["steps"], list)
 
-
+@needs_gemini
 def test_all_actions_are_allowed(sample_plan):
     for step in sample_plan["steps"]:
         assert step["action"] in ALLOWED_ACTIONS
 
-
+@needs_gemini
 def test_every_step_has_required_fields(sample_plan):
     for step in sample_plan["steps"]:
         assert "column" in step
         assert "action" in step
         assert "reason" in step
 
-
+@needs_gemini
 def test_target_column_not_dropped_or_outlier_removed(sample_plan):
     for step in sample_plan["steps"]:
         if step["column"] == "churn":
