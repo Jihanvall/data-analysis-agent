@@ -232,3 +232,26 @@ def test_predict_rejects_oversized_file(client, monkeypatch):
         files={"file": ("big.csv", b"a,b\n1,2\n", "text/csv")},
     )
     assert "too large" in response.json()["detail"]
+
+def test_store_expires_old_entries():
+    store = api.ExpiringStore(ttl_seconds=60, max_entries=5)
+    store["a"] = 1
+    assert "a" in store
+    store.ttl_seconds = -1
+    assert "a" not in store
+
+def test_store_removes_oldest_when_full():
+    store = api.ExpiringStore(ttl_seconds=60, max_entries=2)
+    store["a"] = 1
+    store["b"] = 2
+    store["c"] = 3
+    assert "a" not in store
+    assert "b" in store
+    assert "c" in store
+    assert len(store) == 2
+
+def test_download_expired_session_returns_404(client, monkeypatch):
+    api.cleaned_data_store["old-session"] = pd.DataFrame({"a": [1]})
+    monkeypatch.setattr(api.cleaned_data_store, "ttl_seconds", -1)
+    response = client.get("/download/old-session")
+    assert response.status_code == 404

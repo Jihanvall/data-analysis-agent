@@ -3,6 +3,8 @@ import json
 import shutil 
 import tempfile
 import uuid
+import time
+from collections import OrderedDict
 
 import pandas as pd
 
@@ -12,10 +14,49 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.pipeline import run_pipeline
 from src.predict import prediction_column_name, required_columns, predict_with_bundle
 
+SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", "3600"))
+MAX_STORE_ENTRIES = int(os.getenv("MAX_STORE_ENTRIES", "20"))
+
+class ExpiringStore:
+    def __init__(self, ttl_seconds, max_entries):
+        self.ttl_seconds = ttl_seconds
+        self.max_entries = max_entries
+        self._items = OrderedDict()
+
+    def _purge(self):
+        now = time.monotonic()
+        expired = [k for k, (t, _) in self._items.items() if now - t > self.ttl_seconds]
+        for k in expired:
+            del self._items[k]
+
+    def __setitem__(self, key, value):
+        self._purge()
+        self._items[key] = (time.monotonic(), value)
+        self._items.move_to_end(key)
+        while len(self._items) > self.max_entries:
+            self._items.popitem(last=False)
+
+    def __getitem__(self, key):
+        self._purge()
+        return self._items[key][1]
+
+    def __contains__(self, key):
+        self._purge()
+        return key in self._items
+
+    def __len__(self):
+        self._purge()
+        return len(self._items)
+
+    def clear(self):
+        self._items.clear()
+
+    
+
 app = FastAPI(title="Autonomous Data Analysis Agent API")
-cleaned_data_store: dict[str, pd.DataFrame] = {}
-bundle_store: dict[str, dict] = {}
-predictions_store: dict[str, pd.DataFrame] = {}
+cleaned_data_store = ExpiringStore(SESSION_TTL_SECONDS, MAX_STORE_ENTRIES)
+bundle_store = ExpiringStore(SESSION_TTL_SECONDS, MAX_STORE_ENTRIES)
+predictions_store = ExpiringStore(SESSION_TTL_SECONDS, MAX_STORE_ENTRIES)
 
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "20"))
 
@@ -28,8 +69,8 @@ def check_upload_size(file: UploadFile) -> None:
         raise HTTPException(
             status_code=413,
             detail=(
-                f"File is too large ({size / 1024 / 1024:.1f} MB)."
-                F"the maximum allowed size is {MAX_UPLOAD_MB} MB."
+                f"File is too large ({size / 1024 / 1024:.1f} MB). "
+                F"The maximum allowed size is {MAX_UPLOAD_MB} MB."
             ),
         )
 
