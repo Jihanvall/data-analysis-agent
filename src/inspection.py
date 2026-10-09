@@ -37,6 +37,14 @@ def _missingness_evidence(df, col, target):
         "target_distribution_when_present": {str(k): float(v) for k, v in dist_present.items()},
     }
 
+def _looks_like_date(series):
+    if pd.api.types.is_numeric_dtype(series) or pd.api.types.is_bool_dtype(series):
+        return False
+    values = series.dropna().astype(str).head(200)
+    if len(values) == 0:
+        return False
+    parsed = pd.to_datetime(values, errors="coerce", format="mixed")
+    return bool(parsed.notna().mean() >= 0.9)
 
 def inspect_data(df, target=None):
     report = {
@@ -53,7 +61,7 @@ def inspect_data(df, target=None):
             "n_unique": int(df[col].nunique()),
             "sample_values": df[col].dropna().head(3).astype(str).tolist(),
         }
-
+        col_info["looks_like_date"] = _looks_like_date(df[col])
         if pd.api.types.is_numeric_dtype(df[col]) and not pd.api.types.is_bool_dtype(df[col]):
             q1 = df[col].quantile(0.25)
             q3 = df[col].quantile(0.75)
