@@ -1,7 +1,10 @@
 import pandas as pd
 
+DATE_PARTS = ["year", "month", "day", "dayofweek"]
+
 ACTION_ORDER = {
     "drop_column": 0,
+    "extract_date_features": 0,
     "add_missing_indicator": 1,
     "fill_missing_mean": 2,
     "fill_missing_median": 2,
@@ -38,6 +41,14 @@ def fit_plan(df, plan, target=None):
 
         if action == "drop_column":
             params[(col, action)] = True
+        elif action == "extract_date_features":
+            parsed = pd.to_datetime(df[col], errors="coerce", format="mixed")
+            fills = {}
+            for part in DATE_PARTS:
+                values = getattr(parsed.dt, part).dropna()
+                mode = values.mode()
+                fills[part] = int(mode.iloc[0]) if len(mode) > 0 else 0
+            params[(col, action)] = fills
         elif action == "add_missing_indicator":
             params[(col, action)] = True
         elif action == "fill_missing_mean":
@@ -87,6 +98,11 @@ def transform(df, fitted, drop_outlier_rows=True):
         value = fitted["params"][key]
 
         if action == "drop_column":
+            df = df.drop(columns=[col])
+        elif action == "extract_date_features":
+            parsed = pd.to_datetime(df[col], errors="coerce", format="mixed")
+            for part in DATE_PARTS:
+                df[f"{col}_{part}"] = getattr(parsed.dt, part).fillna(value[part]).astype(int)
             df = df.drop(columns=[col])
         elif action == "add_missing_indicator":
             df[f"{col}_was_missing"] = df[col].isna().astype(int)

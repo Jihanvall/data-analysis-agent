@@ -68,3 +68,16 @@ def test_n_missing_count():
     df = pd.DataFrame({"a": [1, None, 3, None, 5]})
     report = inspect_data(df)
     assert report["columns"]["a"]["n_missing"] == 2
+
+def test_inspection_detects_date_column():
+    df = pd.DataFrame({
+        "d": ["2024-03-15", "2024-03-16", "2024-04-01", "2024-05-20"],
+        "y": [0, 1, 0, 1],
+    })
+    report = inspect_data(df, target="y")
+    assert report["columns"]["d"]["looks_like_date"] is True
+    assert report["columns"]["y"]["looks_like_date"] is False
+
+def test_inspection_ignores_plain_text():
+    df = pd.DataFrame({"c": ["a", "b", "c", "d"], "y": [0, 1, 0, 1]})
+    assert inspect_data(df, target="y")["columns"]["c"]["looks_like_date"] is False
