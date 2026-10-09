@@ -95,3 +95,28 @@ def test_drop_rows_with_missing_fills_instead_in_test():
     out, _ = transform(test, fitted, drop_outlier_rows=False)
     assert len(out) == 2
     assert out["city"].isna().sum() == 0
+
+DATE_PLAN = {"steps": [{"column": "d", "action": "extract_date_features", "reason": "date"}]}
+
+def make_date_df(dates):
+    return pd.DataFrame({"d": dates, "y": [0, 1, 0, 1][: len(dates)]})
+
+def test_extract_date_features_creates_four_columns_and_drops_original():
+    df = make_date_df(["2024-03-15", "2024-03-16", "2024-04-01", "2024-05-20"])
+    fitted, _ = fit_plan(df, DATE_PLAN, target="y")
+    out, _ = transform(df,fitted)
+    assert "d" not in out.columns
+    for part in ["year", "month", "day", "dayofweek"]:
+        assert f"d_{part}" in out.columns
+    assert out.loc[0, "d_year"] == 2024
+    assert out.loc[0, "d_month"] == 3
+    assert out.loc[0, "d_day"] == 15
+    assert out.loc[0, "d_dayofweek"] == 4
+
+def test_unreadable_date_uses_value_learned_from_train():
+   train = make_date_df(["2024-03-15", "2024-03-20", "2024-03-25", "2024-05-01"])
+   fitted, _ = fit_plan(train, DATE_PLAN, target="y")
+   new = pd.DataFrame({"d": ["not a date"], "y": [0]})
+   out, _ = transform(new, fitted, drop_outlier_rows=False)
+   assert out.loc[0, "d_month"] == 3
+   assert not out.isna().any().any()
