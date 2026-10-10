@@ -551,3 +551,223 @@ form {
   background: rgba(124, 58, 237, 0.15);
   font-weight: 700;
 }
+
+.card {
+  backdrop-filter: blur(6px);
+  animation: rise 0.55s ease both;
+  box-shadow: 0 10px 30px rgba(10, 12, 40, 0.35);
+}
+
+.app > .card:nth-of-type(2) { animation-delay: 0.05s; }
+.app > .card:nth-of-type(3) { animation-delay: 0.1s; }
+.app > .card:nth-of-type(4) { animation-delay: 0.15s; }
+.app > .card:nth-of-type(5) { animation-delay: 0.2s; }
+.app > .card:nth-of-type(6) { animation-delay: 0.25s; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero h1 {
+  background-size: 200% 100%;
+  animation: shine 6s linear infinite;
+}
+
+@keyframes shine {
+  to { background-position: 200% 0; }
+}
+
+.dropzone {
+  position: relative;
+  overflow: hidden;
+}
+
+.dropzone:hover,
+.dropzone.dragging {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 4px rgba(139, 109, 255, 0.15), 0 12px 30px rgba(77, 208, 255, 0.15);
+}
+
+.dropzone-icon {
+  display: flex;
+  filter: drop-shadow(0 0 12px rgba(139, 109, 255, 0.5));
+}
+
+.upload-ring {
+  transform-origin: center;
+  animation: spin 14s linear infinite;
+}
+
+.upload-arrow {
+  animation: float 2.2s ease-in-out infinite;
+}
+
+.dropzone:hover .upload-arrow,
+.dropzone.dragging .upload-arrow {
+  animation-duration: 0.9s;
+}
+
+.dropzone.dragging .upload-svg {
+  transform: scale(1.15);
+}
+
+.upload-svg {
+  transition: transform 0.25s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(2px); }
+  50% { transform: translateY(-3px); }
+}
+
+.submit:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(139, 109, 255, 0.45);
+}
+
+.stages {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.stages li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.55;
+  transition: opacity 0.3s;
+}
+
+.stages li.current,
+.stages li.done {
+  opacity: 1;
+}
+
+.stages li.current {
+  color: var(--text);
+}
+
+.stage-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+}
+
+.stages li.current .stage-dot {
+  border-color: var(--accent-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.stages li.done .stage-dot {
+  background: var(--success);
+  border-color: var(--success);
+  color: #0d2a1f;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(77, 208, 255, 0.5); }
+  50% { box-shadow: 0 0 0 7px rgba(77, 208, 255, 0); }
+}
+
+.metric {
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.metric:hover {
+  transform: translateY(-3px);
+  border-color: var(--tone);
+}
+
+.bar-fill {
+  animation: grow 1s ease both;
+  transform-origin: left;
+}
+
+@keyframes grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.step {
+  transition: transform 0.2s;
+}
+
+.step:hover {
+  transform: translateX(4px);
+}
+
+.card {
+  box-shadow: 0 8px 24px rgba(60, 70, 140, 0.12);
+}
+
+.model-card {
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.14), rgba(42, 168, 230, 0.12));
+}
+
+.dropzone:hover,
+.dropzone.dragging {
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.12), 0 10px 24px rgba(42, 168, 230, 0.15);
+}
+
+.done-circle {
+  transform-origin: center;
+  animation: pop 0.4s ease both;
+}
+
+.done-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: draw 0.5s 0.2s ease forwards;
+}
+
+.dropzone.has-file {
+  border-color: var(--success);
+  background: rgba(23, 166, 115, 0.06);
+}
+
+.dropzone-icon:has(.is-done) {
+  filter: drop-shadow(0 0 10px rgba(23, 166, 115, 0.35));
+}
+
+@keyframes pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.hero h1 {
+  background: none;
+  color: var(--text);
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  animation: none;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hero h1::after {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 4px;
+  margin: 14px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
