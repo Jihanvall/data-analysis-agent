@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   BarChart,
   Bar,
@@ -40,6 +40,72 @@ function prettify(text) {
   return String(text).replaceAll("_", " ");
 }
 
+const STAGES = [
+  "Inspection your data",
+  "Asking Gemini for a plan",
+  "Preprocessing safely",
+  "Training and comparing models",
+  "Evaluating and writing the summary",
+];
+
+const STAGE_MS = 4500;
+
+function UploadIcon({ done }) {
+  return (
+    <svg className={`upload-svg ${done ? "is-done" : ""}`} viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+      <defs>
+        <linearGradient id="ug" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="64" y2="64">
+          <stop offset="0%" stopColor="#7c5cff" />
+          <stop offset="100%" stopColor="#2aa8e6" />
+        </linearGradient>
+      </defs>
+      {done ? (
+        <>
+          <circle className="done-circle" cx="32" cy="32" r="28" fill="rgba(23,166,115,0.12)" stroke="#17a673" strokeWidth="3" />
+          <path className="done-check" d="M20 33l8 8 16-17" fill="none" stroke="#17a673" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      ) : (
+        <>
+          <circle className="upload-ring" cx="32" cy="32" r="28" fill="none" stroke="url(#ug)" strokeWidth="3" strokeDasharray="6 8" />
+          <g className="upload-arrow" stroke="url(#ug)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <path d="M32 42V22" />
+            <path d="M23 30l9-9 9 9" />
+          </g>
+        </>
+      )}
+    </svg>
+  );
+}
+
+function Stages({ active }) {
+  return (
+    <ol className="stages">
+      {STAGES.map((label, i) => (
+        <li key={label} className={i < active ? "done" : i === active ? "current" : ""}>
+          <span className="stage-dot">{i < active ? "✓" : i + 1}</span>
+          {label}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function CountUp({ value, decimals }) {
+  const [shown, setShown] = useState(0);
+  const frame = useRef();
+  useEffect(() => {
+    const start = performance.now();
+    const duration = 900;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      setShown(value * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) frame.current = requestAnimationFrame(tick);
+    };
+    frame.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame.current);
+  }, [value]);
+  return <>{Number(shown).toFixed(decimals)}</>;
+}
 function App() {
   const [file, setFile] = useState(null);
   const [target, setTarget] = useState("");
@@ -48,6 +114,16 @@ function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [stage, setStage] = useState(0);
+
+  useEffect(() => {
+    if (!loading) return;
+    setStage(0);
+    const id = setInterval(() => {
+      setStage((s) => Math.min(s + 1, STAGES.length - 1));
+    }, STAGE_MS);
+    return () => clearInterval(id);
+  }, [loading]);
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -107,9 +183,8 @@ function App() {
 
   return (
     <div className="app">
-      <header className="hero">
+            <header className="hero">
         <h1>Autonomous Data Analysis Agent</h1>
-        <p>Upload a CSV, and the agent inspects, cleans, trains, and reports.</p>
       </header>
 
       <form className="card" onSubmit={handleSubmit}>
@@ -128,7 +203,7 @@ function App() {
             hidden
             onChange={(e) => setFile(e.target.files[0] ?? null)}
           />
-          <span className="dropzone-icon">📂</span>
+          <span className="dropzone-icon"><UploadIcon done={!!file} /></span>
           <span className="dropzone-text">
             {file ? file.name : "Click or drop a CSV file here"}
           </span>
@@ -160,6 +235,7 @@ function App() {
           {loading && <span className="spinner" />}
           {loading ? "Analyzing..." : "Analyze"}
         </button>
+        {loading && <Stages active={stage} />}
       </form>
 
       {error && <p className="error">{error}</p>}
@@ -193,7 +269,7 @@ function App() {
                   <div className={`metric tone-${tone}`} key={key}>
                     <span className="metric-label">{prettify(key)}</span>
                     <span className="metric-value">
-                      {Number(value).toFixed(isRatio ? 4 : 3)}
+                    <CountUp value={Number(value)} decimals={isRatio ? 4 : 3} />
                     </span>
                     {isRatio && (
                       <div className="bar">
@@ -217,27 +293,27 @@ function App() {
               <div className="chart">
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={cvData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2f4a" vertical={false} />
-                    <XAxis dataKey="name" stroke="#9aa3c7" tick={{ fontSize: 12 }} />
-                    <YAxis stroke="#9aa3c7" tick={{ fontSize: 12 }} domain={[minScore, 1]} />
-                    <Tooltip
-                      cursor={{ fill: "rgba(124, 92, 255, 0.08)" }}
-                      formatter={(v) => Number(v).toFixed(4)}
-                      contentStyle={{
-                        background: "#181c2e",
-                        border: "1px solid #2a2f4a",
-                        borderRadius: 8,
-                      }}
-                    />
-                    <Bar dataKey="score" radius={[6, 6, 0, 0]}>
-                      {cvData.map((d) => (
-                        <Cell
-                          key={d.key}
-                          fill={d.key === result.model_name ? "#7c5cff" : "#3a4270"}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
+  <CartesianGrid strokeDasharray="3 3" stroke="#dde2f5" vertical={false} />
+  <XAxis dataKey="name" stroke="#5f6a96" tick={{ fontSize: 12 }} />
+  <YAxis stroke="#5f6a96" tick={{ fontSize: 12 }} domain={[minScore, 1]} />
+  <Tooltip
+    cursor={{ fill: "rgba(124, 92, 255, 0.08)" }}
+    formatter={(v) => Number(v).toFixed(4)}
+    contentStyle={{
+      background: "#ffffff",
+      border: "1px solid #dde2f5",
+      borderRadius: 8,
+    }}
+  />
+  <Bar dataKey="score" radius={[6, 6, 0, 0]}>
+    {cvData.map((d) => (
+      <Cell
+        key={d.key}
+        fill={d.key === result.model_name ? "#7c5cff" : "#b9c0e6"}
+      />
+    ))}
+  </Bar>
+</BarChart>
                 </ResponsiveContainer>
               </div>
             </section>
