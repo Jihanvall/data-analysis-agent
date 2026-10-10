@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.pipeline import run_pipeline
 from src.predict import prediction_column_name, required_columns, predict_with_bundle
+from src.explain import explain_results
 
 SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", "3600"))
 MAX_STORE_ENTRIES = int(os.getenv("MAX_STORE_ENTRIES", "20"))
@@ -110,6 +111,7 @@ async def analyze(
         session_id = str(uuid.uuid4())
         cleaned_data_store[session_id] = combined
         bundle_store[session_id] = result["bundle"]
+        explanation = explain_results(result, task_type)
 
         return {
             "model_name": result["model_name"],
@@ -121,6 +123,7 @@ async def analyze(
             "required_columns": required_columns(result["bundle"]),
             "prediction_column": prediction_column_name(result["bundle"]),
             "session_id": session_id,
+            "explanation": explanation,
         }  
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

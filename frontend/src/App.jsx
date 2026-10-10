@@ -17,6 +17,7 @@ const API_URL = "http://127.0.0.1:8000/analyze";
 
 const ACTION_STYLES = {
   drop_column: { icon: "🗑️", label: "Drop column", tone: "danger" },
+  extract_date_features: { icon: "", label: "Extract date features", tone: "info"},
   add_missing_indicator: { icon: "", label: "Add missing indicator", tone: "warning" },
   fill_missing_mean: { icon: "", label: "Fill with mean", tone: "success" },
   fill_missing_median: { icon: "", label: "Fill with median", tone: "success" },
@@ -175,7 +176,13 @@ function App() {
                ⬇ Download cleaned data
             </button>
           </section>
-
+          
+          {result.explanation && (
+            <section className="card">
+              <h3>Summary</h3>
+              <p>{result.explanation}</p>
+            </section>
+          )}
           <section className="card">
             <h3>Test metrics</h3>
             <div className="metrics">
