@@ -1,21 +1,21 @@
 :root {
-  --bg: #0f1220;
-  --card: #181c2e;
-  --card-2: #1f2440;
-  --border: #2a2f4a;
-  --text: #e8eaf6;
-  --muted: #9aa3c7;
+  --bg: #d8e0f9;
+  --card: #ffffff;
+  --card-2: #f0f3ff;
+  --border: #dde2f5;
+  --text: #1f2547;
+  --muted: #5f6a96;
   --accent: #7c5cff;
-  --accent-2: #3ec6ff;
-  --success: #2ecc8f;
-  --warning: #ffb84d;
-  --danger: #ff5c7a;
-  --info: #3ec6ff;
-  --purple: #b07cff;
+  --accent-2: #2aa8e6;
+  --success: #17a673;
+  --warning: #d98a00;
+  --danger: #e0415f;
+  --info: #2aa8e6;
+  --purple: #8a5cf0;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   color: var(--text);
   background: var(--bg);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -25,5 +25,31 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 0%, #1b1f3d 0%, var(--bg) 45%);
+  background: var(--bg);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(600px circle at 15% 10%, rgba(178, 159, 253, 0.18), transparent 60%),
+    radial-gradient(700px circle at 85% 20%, rgba(42, 168, 230, 0.16), transparent 60%),
+    radial-gradient(800px circle at 50% 100%, rgba(138, 92, 240, 0.12), transparent 60%);
+  background-size: 140% 140%;
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from { background-position: 0% 0%; }
+  to { background-position: 100% 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
