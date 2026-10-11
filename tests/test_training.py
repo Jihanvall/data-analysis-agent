@@ -82,3 +82,18 @@ def test_invalid_task_type_raises():
         assert False, "expected ValueError"
     except ValueError:
         pass
+
+def test_tuning_info_is_consistent_when_present():
+    X, y = _classification_data(n=120)
+    model, name, cv = select_and_train(X, y, "classification")
+    assert "scores" in cv
+    if "tuning" in cv:
+        t = cv["tuning"]
+        assert t["score_after"] > t["score_before"]
+        assert isinstance(t["best_params"], dict)
+
+def test_linear_regression_is_not_tuned():
+    X, y = _regression_data()
+    model, name, cv = select_and_train(X, y, "regression")
+    if name == "linear_regression":
+        assert "tuning" not in cv
