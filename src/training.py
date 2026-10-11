@@ -1,8 +1,9 @@
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.cluster import KMeans
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, RandomizedSearchCV
 from sklearn.metrics import f1_score, r2_score, accuracy_score, mean_absolute_error, make_scorer
+from sklearn.base import clone
 
 CANDIDATES = {
     "classification": {
@@ -21,7 +22,21 @@ CANDIDATES = {
 }
 
 IMBALANCE_THRESHOLD = 0.1
+N_TUNING_ITER = 10
 
+PARAM_GRIDS = {
+    "logistic_regression": {"C": [0.01, 0.1, 1, 10, 100]},
+    "random_forest": {
+        "n_estimators": [100, 200, 300],
+        "max_depth": [None, 5, 10, 20],
+        "min_samples_leaf": [1, 2, 4],
+    },
+    "gradient_boosting": {
+        "n_estimators": [100, 200],
+        "learning_rate": [0.03, 0.1, 0.2],
+        "max_depth": [2, 3, 5],
+    },
+}
 
 def _get_scoring(y_train):
     counts = y_train.value_counts(normalize=True)
@@ -33,6 +48,32 @@ def _get_scoring(y_train):
 
     return "f1_weighted", "f1_weighted"
 
+def _tune(model, name, X_train,y_train, scoring, base_score):
+    grid = PARAM_GRIDS.get(name)
+    if not grid:
+        return model, None
+    search = RandomizedSearchCV(
+        clone(model),
+        grid,
+        n_iter=min(N_TUNING_ITER, _grid_size(grid)),
+        cv=5,
+        scoring=scoring,
+        random_state=42,
+    )
+    search.fit(X_train, y_train)
+    if search.best_score_ > base_score:
+        return search.best_estimator_, {
+            "best_params": search.best_params_,
+            "score_before": float(base_score),
+            "score_after": float(search.best_score_),
+        }
+    return model, None
+
+def _grid_size(grid):
+    size = 1
+    for values in grid.values():
+        size *= len(values)
+    return size
 
 def select_and_train(X_train, y_train, task_type):
     if task_type not in CANDIDATES:
@@ -55,11 +96,15 @@ def select_and_train(X_train, y_train, task_type):
 
     best_name = max(scores, key=scores.get)
     best_model = CANDIDATES[task_type][best_name]
+    best_model, tuning = _tune(
+        best_model, best_name, X_train, y_train, scoring, scores[best_name]
+    )
     best_model.fit(X_train, y_train)
 
-    return best_model, best_name, {"scoring_used": scoring_name, "scores": scores}
-
-
+    cv_info = {"scoring_used": scoring_name, "scores": scores}
+    if tuning:
+        cv_info["tuning"] = tuning
+    return best_model, best_name, cv_info
 def evaluate(model, X_test, y_test, task_type):
     if task_type == "clustering":
         labels = model.predict(X_test)
