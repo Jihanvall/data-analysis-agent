@@ -10,5 +10,8 @@ venv/
 # Data files 
 data/*.csv
 
+# Generated reports
+reports/
+
 # IDE
 .vscode/
