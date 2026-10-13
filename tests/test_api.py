@@ -275,3 +275,7 @@ def test_analyze_unreadable_csv_returns_400(client):
         data={"target": "y", "task_type": "classification"},
     )
     assert response.status_code == 400
+
+def test_cors_allows_default_origin(client):
+    response = client.get("/", headers={"Origin": "http://localhost:5173"})
+    assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"

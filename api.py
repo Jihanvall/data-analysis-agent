@@ -60,6 +60,11 @@ bundle_store = ExpiringStore(SESSION_TTL_SECONDS, MAX_STORE_ENTRIES)
 predictions_store = ExpiringStore(SESSION_TTL_SECONDS, MAX_STORE_ENTRIES)
 
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "20"))
+ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    if o.strip()
+]
 
 def check_upload_size(file: UploadFile) -> None:
     max_bytes = MAX_UPLOAD_MB * 1024 * 1024
@@ -77,7 +82,7 @@ def check_upload_size(file: UploadFile) -> None:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
