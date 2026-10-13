@@ -201,7 +201,10 @@ function App() {
             type="file"
             accept=".csv"
             hidden
-            onChange={(e) => setFile(e.target.files[0] ?? null)}
+            onChange={(e) => {
+              setFile(e.target.files[0] ?? null);
+              setError(null);
+            }}
           />
           <span className="dropzone-icon"><UploadIcon done={!!file} /></span>
           <span className="dropzone-text">
