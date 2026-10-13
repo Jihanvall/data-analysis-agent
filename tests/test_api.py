@@ -255,3 +255,23 @@ def test_download_expired_session_returns_404(client, monkeypatch):
     monkeypatch.setattr(api.cleaned_data_store, "ttl_seconds", -1)
     response = client.get("/download/old-session")
     assert response.status_code == 404
+
+def test_analyze_missing_target_column_returns_clear_400(client):
+    response = client.post(
+        "/analyze",
+        files={"file": ("data.csv", b"a,b\n1,2\n3,4\n", "text/csv")},
+        data={"target": "ghost", "task_type": "classification"},
+    )
+    assert response.status_code == 400
+    detail = response.json()["detail"]
+    assert "ghost" in detail
+    assert "a, b" in detail
+
+
+def test_analyze_unreadable_csv_returns_400(client):
+    response = client.post(
+        "/analyze",
+        files={"file": ("data.csv", b"", "text/csv")},
+        data={"target": "y", "task_type": "classification"},
+    )
+    assert response.status_code == 400
