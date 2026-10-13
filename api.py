@@ -98,6 +98,21 @@ async def analyze(
         raise HTTPException(status_code=400, detail="target is required unless task_type is clustering")
 
     check_upload_size(file)
+
+    if task_type != "clustering":
+        try:
+            header = pd.read_csv(file.file, nrows=0)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Could not read the uploaded file as CSV")
+        finally:
+            file.file.seek(0)
+        if target not in header.columns:
+            available = ", ".join(map(str, header.columns))
+            raise HTTPException(
+                status_code=400,
+                detail=f"Target column '{target}' was not found in the file. Available columns: {available}",
+            )
+
     tmp_dir = tempfile.mkdtemp()
     tmp_path = os.path.join(tmp_dir, file.filename)
 
