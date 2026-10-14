@@ -302,3 +302,11 @@ def test_predict_rejects_non_csv_file(client):
     )
     assert response.status_code == 400
     assert "CSV" in response.json()["detail"]
+
+def test_health_reports_status_and_limits(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["limits"]["max_upload_mb"] == api.MAX_UPLOAD_MB
+    assert isinstance(body["sessions"], int)

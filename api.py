@@ -98,6 +98,19 @@ app.add_middleware(
 def health_check():
     return {"status": "ok"}
 
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "sessions": len(cleaned_data_store),
+        "bundle": len(bundle_store),
+        "predictions": len(predictions_store),
+        "limits": {
+            "max_upload_mb": MAX_UPLOAD_MB,
+            "session_ttl_seconds": SESSION_TTL_SECONDS,
+            "max_store_entries": MAX_STORE_ENTRIES,
+        },
+    }
 @app.post("/analyze")
 async def analyze(
     file: UploadFile = File(...),
