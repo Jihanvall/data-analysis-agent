@@ -1,0 +1,13 @@
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+data/
+reports/
+frontend/
+tests/
+docs/
+.git/
+.github/
+new_*.csv
