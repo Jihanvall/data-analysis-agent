@@ -66,6 +66,13 @@ ALLOWED_ORIGINS = [
     if o.strip()
 ]
 
+def check_csv_extension(file: UploadFile) -> None:
+    name = (file.filename or "").lower()
+    if not name.endswith(".csv"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only CSV files are supported. Please upload a file ending with .csv.",
+        )
 def check_upload_size(file: UploadFile) -> None:
     max_bytes = MAX_UPLOAD_MB * 1024 * 1024
     file.file.seek(0, os.SEEK_END)
@@ -101,7 +108,8 @@ async def analyze(
         raise HTTPException(status_code=400, detail="Invalid task_type")
     if task_type != "clustering" and not target:
         raise HTTPException(status_code=400, detail="target is required unless task_type is clustering")
-
+    
+    check_csv_extension(file)
     check_upload_size(file)
 
     if task_type != "clustering":
@@ -169,6 +177,7 @@ async def predict(
     session_id: str = Form(...),
     file: UploadFile = File(...),
 ):
+    check_csv_extension(file)
     check_upload_size(file)
 
     if session_id not in bundle_store:

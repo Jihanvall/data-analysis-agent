@@ -19,6 +19,11 @@ FAKE_PLAN = {
 def mock_gemini(monkeypatch):
     monkeypatch.setattr("src.pipeline.get_preprocessing_plan", lambda report, target, task_type: FAKE_PLAN)
 
+@pytest.fixture(autouse=True)
+def fast_pipeline(monkeypatch):
+    from src import training
+    monkeypatch.setattr(training, "N_TUNING_ITER", 1)
+    monkeypatch.setattr("api.explain_results", lambda result, task_type: None)
 
 @pytest.fixture
 def client():
@@ -279,3 +284,21 @@ def test_analyze_unreadable_csv_returns_400(client):
 def test_cors_allows_default_origin(client):
     response = client.get("/", headers={"Origin": "http://localhost:5173"})
     assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
+
+def test_analyze_rejects_non_csv_file(client):
+    response = client.post(
+        "/analyze",
+        files={"file": ("photo.png", b"not a csv", "image/png")},
+        data={"target": "y", "task_type": "classification"},
+    )
+    assert response.status_code == 400
+    assert "CSV" in response.json()["detail"]
+
+def test_predict_rejects_non_csv_file(client):
+    response = client.post(
+        "/predict",
+        data={"session_id": "anything"},
+        files={"file": ("doc.pdf", b"%PDF", "application/pdf")},
+    )
+    assert response.status_code == 400
+    assert "CSV" in response.json()["detail"]

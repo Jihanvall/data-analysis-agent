@@ -128,7 +128,14 @@ function App() {
   const handleDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+    const dropped = e.dataTransfer.files[0];
+    if (!dropped) return;
+    if (!dropped.name.toLowerCase().endsWith(".csv")) {
+      setError("Only CSV files are supported. Please drop a file ending with .csv.");
+      return;
+    }
+    setError(null);
+    setFile(dropped);
   };
 
   const handleSubmit = async (e) => {
