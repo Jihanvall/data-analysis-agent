@@ -117,6 +117,17 @@ Then open `http://localhost:5173` in your browser, upload a CSV file, enter the 
 
 Interactive documentation is available at `http://127.0.0.1:8000/docs` while the backend is running.
 
+## Docker
+
+Build and run the backend in a container:
+
+```
+docker build -t data-agent .
+docker run --rm -p 8000:8000 --env-file .env data-agent
+```
+
+The API is then available at `http://127.0.0.1:8000`. Configuration is done through the environment variables listed above.
+
 ## Tests
 
 ```
