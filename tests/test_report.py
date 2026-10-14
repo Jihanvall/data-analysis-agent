@@ -32,3 +32,40 @@ def test_save_report_creates_file(tmp_path):
     assert os.path.exists(path)
     with open(path, encoding="utf-8") as f:
         assert f.read() == text
+
+TUNED_RESULT = {
+    "plan": {"steps": []},
+    "log": [],
+    "model_name": "random_forest",
+    "cv_scores": {
+        "scoring_used": "f1_weighted",
+        "scores": {"random_forest": 0.83, "logistic_regression": 0.71},
+        "tuning": {
+            "best_params": {"n_estimators": 200, "max_depth": 10},
+            "score_before": 0.83,
+            "score_after": 0.87,
+        },
+    },
+    "test_metrics": {"accuracy": 0.85},
+}
+
+def test_report_shows_tuning_section_when_present():
+    text = generate_report(TUNED_RESULT, "churn")
+    assert "## Hyperparameter Tuning" in text
+    assert "Score before: 0.83" in text
+    assert "Score after: 0.87" in text
+    assert "n_estimators=200" in text
+
+def test_report_has_no_tuning_section_without_tuning():
+    text = generate_report(FAKE_RESULT, "churn")
+    assert "Hyperparameter Tuning" not in text
+
+def test_report_has_no_tuning_section_when_scores_not_improved():
+    result = {
+        **TUNED_RESULT,
+        "cv_scores": {
+            "scoring_used": "f1_weighted",
+            "scores": {"random_forest": 0.83},
+        },
+    }
+    assert "Hyperparameter Tuning" not in generate_report(result, "churn")
