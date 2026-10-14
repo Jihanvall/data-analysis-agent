@@ -1,3 +1,4 @@
+import os
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.cluster import KMeans
@@ -22,7 +23,7 @@ CANDIDATES = {
 }
 
 IMBALANCE_THRESHOLD = 0.1
-N_TUNING_ITER = 10
+N_TUNING_ITER = int(os.getenv("N_TUNING_ITER", "10"))
 
 PARAM_GRIDS = {
     "logistic_regression": {"C": [0.01, 0.1, 1, 10, 100]},

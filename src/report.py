@@ -40,6 +40,21 @@ def generate_report(result, dataset_name="dataset"):
             lines.append(f"- {name}: {round(score, 4)}{marker}")
     lines.append("")
 
+    tuning = cv.get("tuning") if "scoring_used" in cv else None
+    if tuning:
+        lines.append("## Hyperparameter Tuning")
+        lines.append("")
+        lines.append(
+            "The best model was tuned with a randomized search, and the tuned "
+            "version was kept because it scored higher in cross-validation."
+        )
+        lines.append("")
+        lines.append(f"- Score before: {round(tuning['score_before'], 4)}")
+        lines.append(f"- Score after: {round(tuning['score_after'], 4)}")
+        params = ", ".join(f"{k}={v}" for k, v in tuning["best_params"].items())
+        lines.append(f"- Best parameteres: {params}")
+        lines.append("")
+        
     lines.append("## Test Set Performance")
     lines.append("")
     for metric, value in result["test_metrics"].items():
