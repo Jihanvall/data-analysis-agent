@@ -187,7 +187,8 @@ function App() {
       score: Number(score.toFixed(4)),
     }));
   const minScore = cvData.length ? Math.min(0, ...cvData.map((d) => d.score)) : 0;
-
+  const importance = result?.feature_importance ?? [];
+  const maxImportance = Math.max(1e-9, ...importance.map((f) => f.importance));
   return (
     <div className="app">
             <header className="hero">
@@ -326,6 +327,27 @@ function App() {
 </BarChart>
                 </ResponsiveContainer>
               </div>
+            </section>
+          )}
+                    {importance.length > 0 && (
+            <section className="card">
+              <h3>
+                Most influential columns <span className="hint">(permutation importance)</span>
+              </h3>
+              <ul className="importance">
+                {importance.map((f) => (
+                  <li className="tone-info" key={f.feature}>
+                    <span className="imp-name">{f.feature}</span>
+                    <div className="bar">
+                      <div
+                        className="bar-fill"
+                        style={{ width: `${(Math.max(0, f.importance) / maxImportance) * 100}%` }}
+                      />
+                    </div>
+                    <span className="imp-value">{f.importance.toFixed(4)}</span>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
           {result.inspection_report && (
