@@ -310,3 +310,7 @@ def test_health_reports_status_and_limits(client):
     assert body["status"] == "ok"
     assert body["limits"]["max_upload_mb"] == api.MAX_UPLOAD_MB
     assert isinstance(body["sessions"], int)
+
+def test_analyze_returns_feature_importance_list(client, sample_csv):
+    body = _analyze(client, sample_csv)
+    assert isinstance(body["feature_importance"], list)
