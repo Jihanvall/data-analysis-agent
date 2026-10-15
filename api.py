@@ -165,6 +165,7 @@ async def analyze(
             "prediction_column": prediction_column_name(result["bundle"]),
             "session_id": session_id,
             "explanation": explanation,
+            "feature_importance": result["feature_importance"],
         }  
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
