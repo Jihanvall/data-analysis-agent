@@ -69,3 +69,15 @@ def test_report_has_no_tuning_section_when_scores_not_improved():
         },
     }
     assert "Hyperparameter Tuning" not in generate_report(result, "churn")
+
+def test_report_shows_importance_section_when_present():
+    result = {
+        **FAKE_RESULT,
+        "feature_importance": [{"feature": "age", "importance": 0.12}],
+    }
+    text = generate_report(result, "churn")
+    assert "## Most Influential Columns" in text
+    assert "- age: 0.12" in text
+
+def test_report_has_no_importance_section_without_data():
+    assert "Most Influential Columns" not in generate_report(FAKE_RESULT, "churn")

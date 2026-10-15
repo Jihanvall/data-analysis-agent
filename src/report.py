@@ -54,7 +54,16 @@ def generate_report(result, dataset_name="dataset"):
         params = ", ".join(f"{k}={v}" for k, v in tuning["best_params"].items())
         lines.append(f"- Best parameteres: {params}")
         lines.append("")
-        
+
+    importance = result.get("feature_importance") or []
+    if importance:
+        lines.append("## Most Influential Columns")
+        lines.append("")
+        lines.append("Permutation importance on a sample of the test set:")
+        lines.append("")
+        for item in importance:
+            lines.append(f"- {item['feature']}: {item['importance']}")
+        lines.append("")
     lines.append("## Test Set Performance")
     lines.append("")
     for metric, value in result["test_metrics"].items():
