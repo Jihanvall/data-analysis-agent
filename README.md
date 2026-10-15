@@ -9,7 +9,7 @@ An AI-powered tool that takes a raw CSV file and automatically inspects it, deci
 1. **Inspection** (`src/inspection.py`) — scans the dataset and builds a report: row/column counts, types, missing value percentages and counts, outlier counts, sample values, date-like columns, target column distribution, and missingness evidence (whether missing values in a column correlate with the target, a signal that missingness may not be random).
 2. **Decision** (`src/decision.py`) — sends the inspection report to the Gemini API, which returns a structured preprocessing plan (column, action, reason) chosen from a fixed set of safe actions.
 3. **Preprocessing** (`src/preprocessing.py`) — applies the plan with `fit`/`transform`, learning parameters (fill values, outlier bounds, categories, date fallbacks) from training data only, to avoid data leakage into the test set.
-4. **Training** (`src/training.py`) — trains several candidate models (Logistic Regression, Random Forest, Gradient Boosting for classification; equivalents for regression; KMeans for clustering), selects the best one via cross-validation, and automatically switches to a minority-class-focused metric when the target is highly imbalanced. The best model is then tuned with a small randomized search, and the tuned version is kept only if its cross-validation score improves.
+4. **Training** (`src/training.py`) — trains several candidate models (Logistic Regression, Random Forest, Gradient Boosting for classification; equivalents for regression; KMeans for clustering), selects the best one via cross-validation, and automatically switches to a minority-class-focused metric when the target is highly imbalanced. The best model is then tuned with a small randomized search, and the tuned version is kept only if its cross-validation score improves. The tuning result is included in the saved report.
 5. **Explanation** (`src/explain.py`) — asks Gemini for a short plain-language summary of the results. If the call fails, the analysis still completes without a summary.
 6. **Report** (`src/report.py`) — turns the results into a Markdown report and saves it under `reports/`.
 7. **Prediction** (`src/predict.py`, `src/model_io.py`) — the trained model is saved together with its preprocessing steps, so new CSV files can be predicted with exactly the same cleaning.
@@ -110,10 +110,13 @@ Then open `http://localhost:5173` in your browser, upload a CSV file, enter the 
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | GET | `/` | Health check |
+| GET | `/health` | Status, number of stored sessions and the configured limits |
 | POST | `/analyze` | Runs the full pipeline on an uploaded CSV |
 | GET | `/download/{session_id}` | Downloads the cleaned data |
 | POST | `/predict` | Predicts on a new CSV using the model of a session |
 | GET | `/download-predictions/{prediction_id}` | Downloads the predictions |
+
+Only files ending with `.csv` are accepted by `/analyze` and `/predict`; other files are rejected with a 400 error.
 
 Interactive documentation is available at `http://127.0.0.1:8000/docs` while the backend is running.
 
@@ -126,7 +129,7 @@ docker build -t data-agent .
 docker run --rm -p 8000:8000 --env-file .env data-agent
 ```
 
-The API is then available at `http://127.0.0.1:8000`. Configuration is done through the environment variables listed above.
+The API is then available at `http://127.0.0.1:8000`, and `http://127.0.0.1:8000/health` reports its status. Configuration is done through the environment variables listed above. The container runs only the backend; start the frontend separately with `npm run dev`.
 
 ## Tests
 
@@ -136,13 +139,14 @@ pytest -v
 
 Tests cover inspection, preprocessing, training, prediction, the API, and report generation offline. The tests in `test_decision.py` call the real Gemini API, so they are skipped automatically when `GEMINI_API_KEY` is not set. The free Gemini tier allows only a few requests per minute, so if you see a quota error, run `pytest tests/test_decision.py` on its own.
 
-Tests also run automatically on every push and pull request through GitHub Actions.
+On every push and pull request, GitHub Actions runs the Python tests, builds the Docker image and builds the frontend.
 
 ## Project structure
 
 ```
 api.py                 # FastAPI backend
 run.py                 # command line entry point
+Dockerfile             # backend container image
 src/
   inspection.py        # data inspection report
   decision.py          # Gemini-based preprocessing plan
